@@ -174,7 +174,6 @@ def health_check():
 
 if __name__ == '__main__':
     # Initialize database with enhanced configuration
-    db.init_app(app)
     db_config.create_tables_if_needed(app)
     
     print(f"🚀 Starting Agentic Mapping System")
