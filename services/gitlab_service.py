@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, List
 import os
 
 
-class GitlabService:
+class GitLabService:
     """
     Service for fetching Databricks notebooks and code from GitLab repositories
     """

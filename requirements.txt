@@ -17,8 +17,14 @@ python-gitlab==4.3.0
 azure-identity==1.15.0
 azure-core==1.29.5
 
+# Database drivers for different backends
+databricks-sql-connector==3.0.0  # For Databricks SQL
+psycopg2-binary==2.9.7          # For PostgreSQL
+pymysql==1.1.0                  # For MySQL
+cryptography==41.0.7            # For secure connections
+
 # Agent Framework (for multi-agent orchestration)
-agent-framework==0.1.0
+# agent-framework==0.1.0  # Commented out for demo
 
 # Data processing and analysis
 beautifulsoup4==4.12.2

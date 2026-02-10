@@ -6,6 +6,7 @@ from agents.agent_orchestrator import AgentOrchestrator
 from services.gitlab_service import GitlabService
 from services.llm_service import LLMService
 from models.database import db, MappingSession, MappingResult
+from models.databricks_config import get_database_config
 import asyncio
 import json
 from datetime import datetime
@@ -14,10 +15,12 @@ import tempfile
 app = Flask(__name__)
 CORS(app)
 
-# Configuration
+# Enhanced configuration for Databricks Apps
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///mappings.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Database configuration - supports multiple backends
+db_config = get_database_config()
+db_config.configure_flask_app(app)
 
 # Databricks LLM endpoints
 app.config['CLAUDE_ENDPOINT'] = 'https://dbc-3735add4-1cb6.cloud.databricks.com/serving-endpoints/databricks-claude-sonnet-4/invocations'
@@ -170,8 +173,13 @@ def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()})
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+    # Initialize database with enhanced configuration
+    db.init_app(app)
+    db_config.create_tables_if_needed(app)
     
-    # Run Flask app
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print(f"🚀 Starting Agentic Mapping System")
+    print(f"Database Type: {db_config.database_type}")
+    print(f"Environment: {os.getenv('FLASK_ENV', 'production')}")
+    
+    # Run Flask app (in Databricks Apps, this runs on the cluster)
+    app.run(host='0.0.0.0', port=5000, debug=os.getenv('DEBUG', 'False').lower() == 'true')

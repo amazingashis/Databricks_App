@@ -39,7 +39,7 @@ graph TB
     end
     
     subgraph "💾 Storage & Output"
-        DB[(SQLite Database<br/>- Session data<br/>- Mappings cache)]
+        DB[(Multi-Backend Database<br/>- Databricks SQL (Prod)<br/>- PostgreSQL/Azure SQL<br/>- SQLite (Dev only)]
         EX[Excel Output<br/>- Standard mapping format<br/>- User annotations]
     end
 
@@ -94,10 +94,84 @@ The agents work in a coordinated workflow:
    # Edit .env with your actual configuration
    ```
 
-4. **Initialize the database**:
+4. **Initialize the database** (Development only - see Database section for production):
    ```bash
    python -c "from app import app; from models.database import db; app.app_context().push(); db.create_all()"
    ```
+
+## Database Configuration
+
+### For Databricks Apps Deployment
+
+**⚠️ Important**: This application supports multiple database backends optimized for Databricks Apps:
+
+#### Why SQLite doesn't work with Databricks Apps:
+- Databricks Apps use ephemeral file systems that reset on restart
+- SQLite databases would be lost when the app restarts  
+- No data persistence across cluster restarts
+
+#### Recommended Options:
+
+1. **Databricks SQL (Recommended)**:
+   ```env
+   DATABASE_URL=databricks+sql://<token>@<hostname>/<warehouse_id>?catalog=<catalog>&schema=<schema>
+   DATABRICKS_SQL_WAREHOUSE_ID=your-sql-warehouse-id
+   DATABRICKS_CATALOG=mapping_apps
+   DATABRICKS_SCHEMA=mapping_system
+   ```
+
+2. **External Database** (Azure SQL, PostgreSQL, MySQL):
+   ```env
+   # PostgreSQL
+   DATABASE_URL=postgresql://user:password@host:port/database
+   
+   # Azure SQL
+   DATABASE_URL=mssql+pyodbc://user:password@server.database.windows.net/db?driver=ODBC+Driver+18+for+SQL+Server
+   
+   # MySQL
+   DATABASE_URL=mysql://user:password@host:port/database
+   ```
+
+3. **Development Only** (SQLite - NOT for production):
+   ```env
+   DATABASE_URL=sqlite:///mapping_system.db
+   ```
+
+The application automatically detects the database backend and configures accordingly. See [Database Configuration Guide](docs/databricks-database-config.md) for detailed setup.
+
+## Databricks Apps Deployment
+
+### Prerequisites
+1. **Database Setup**: Configure a persistent database (Databricks SQL or external database)
+2. **Cluster Configuration**: Ensure the cluster has required libraries installed
+3. **Environment Variables**: Set all required environment variables in cluster configuration
+
+### Deployment Steps
+
+1. **Upload application files** to Databricks workspace
+2. **Install dependencies** on the cluster:
+   ```bash
+   pip install flask sqlalchemy databricks-sql-connector flask-cors openpyxl gitpython
+   ```
+3. **Configure environment variables** in cluster settings:
+   ```
+   DATABRICKS_TOKEN=dapi-xxx...
+   CLAUDE_ENDPOINT=https://your-databricks-instance.cloud.databricks.com/serving-endpoints/databricks-claude-sonnet-4/invocations
+   LLAMA_ENDPOINT=https://your-databricks-instance.cloud.databricks.com/serving-endpoints/databricks-meta-llama-3-3-70b-instruct/invocations
+   DATABASE_URL=databricks+sql://...
+   SECRET_KEY=your-secret-key
+   ```
+4. **Run the Flask application** as a Databricks App:
+   ```python
+   # In a notebook cell:
+   %run /path/to/app.py
+   ```
+
+### Important Notes:
+- **File System**: Use DBFS or external storage for persistent files
+- **Database**: Never use SQLite - use Databricks SQL or external database
+- **Secrets**: Store sensitive credentials in Databricks secrets
+- **Scaling**: Configure cluster auto-scaling for production workloads
 
 ## Configuration
 
@@ -161,9 +235,9 @@ The system generates mapping documents in the standard format:
 
 ## Technology Stack
 
-- **Backend**: Flask, SQLAlchemy, AsyncIO
-- **Frontend**: Vue.js, Axios
-- **Database**: SQLite (configurable)
-- **AI/LLM**: Databricks-hosted Claude & Llama models
+- **Backend**: Flask 3.0.0, SQLAlchemy, AsyncIO
+- **Frontend**: Vue.js 3, Axios  
+- **Database**: Multi-backend support (Databricks SQL, PostgreSQL, Azure SQL, MySQL, SQLite for dev)
+- **AI/LLM**: Databricks-hosted Claude Sonnet 4 & Llama 3.3 70B models
 - **Code Analysis**: Python AST, Regex patterns
-- **Agent Framework**: Microsoft Agent Framework
+- **Orchestration**: Custom agent coordination (MCP-inspired)
