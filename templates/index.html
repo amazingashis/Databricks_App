@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Mapping Document Generator</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-section {
+            border: 2px dashed #e1e5e9;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e1e5e9;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-processing { background: #cce5fd; color: #0066cc; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .mapping-table th,
+        .mapping-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .mapping-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .confidence-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .confidence-bar {
+            width: 60px;
+            height: 4px;
+            background: #e1e5e9;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            border-radius: 2px;
+        }
+        
+        .confidence-high { background: #28a745; }
+        .confidence-medium { background: #ffc107; }
+        .confidence-low { background: #dc3545; }
+        
+        .needs-review {
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .alert {
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e1e5e9;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e1e5e9;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>🤖 Agentic Mapping Document Generator</h1>
+                <p>Automatically generate standard mapping documents from Databricks notebooks using AI agents</p>
+            </div>
+
+            <!-- Upload and Configuration Section -->
+            <div class="card">
+                <h2>📁 Notebook Analysis</h2>
+                
+                <div class="upload-section">
+                    <div v-if="!isAnalyzing">
+                        <h3>Select Databricks Notebook</h3>
+                        <p>Choose a notebook file or provide GitLab repository details</p>
+                        
+                        <div class="input-group" style="margin-top: 20px;">
+                            <label>Notebook Path</label>
+                            <input v-model="analysisConfig.notebook_path" placeholder="e.g., load_silver_provider.py">
+                        </div>
+                        
+                        <details style="margin: 20px 0; text-align: left;">
+                            <summary style="cursor: pointer; font-weight: 600;">GitLab Configuration (Optional)</summary>
+                            <div style="margin-top: 15px;">
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label>GitLab URL</label>
+                                        <input v-model="analysisConfig.gitlab_credentials.gitlab_url" placeholder="https://gitlab.example.com">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Project ID</label>
+                                        <input v-model="analysisConfig.gitlab_credentials.project_id" placeholder="123">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label>Access Token</label>
+                                        <input v-model="analysisConfig.gitlab_credentials.access_token" type="password" placeholder="glpat-xxxxxxxxxxxx">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Branch</label>
+                                        <input v-model="analysisConfig.gitlab_credentials.branch" placeholder="main">
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <button class="btn" @click="startAnalysis" :disabled="!analysisConfig.notebook_path">
+                            🚀 Start Analysis
+                        </button>
+                    </div>
+                    
+                    <div v-else>
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>AI agents are analyzing your notebook...</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" :style="{width: progress + '%'}"></div>
+                        </div>
+                        <p>{{ currentStep }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div v-if="error" class="alert alert-error">
+                <strong>Error:</strong> {{ error }}
+            </div>
+
+            <!-- Success Display -->
+            <div v-if="analysisComplete" class="alert alert-success">
+                <strong>Analysis Complete!</strong> {{ totalMappings }} mappings generated with {{ highConfidenceCount }} high-confidence results.
+            </div>
+
+            <!-- Results Section -->
+            <div v-if="currentSession" class="card">
+                <div class="tabs">
+                    <div class="tab" :class="{active: activeTab === 'mappings'}" @click="activeTab = 'mappings'">
+                        📋 Mappings ({{ mappings.length }})
+                    </div>
+                    <div class="tab" :class="{active: activeTab === 'review'}" @click="activeTab = 'review'">
+                        🔍 Review Required ({{ reviewCount }})
+                    </div>
+                    <div class="tab" :class="{active: activeTab === 'stats'}" @click="activeTab = 'stats'">
+                        📊 Statistics
+                    </div>
+                </div>
+
+                <!-- Mappings Tab -->
+                <div v-if="activeTab === 'mappings'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>Generated Mappings</h3>
+                        <button class="btn" @click="exportToExcel" :disabled="mappings.length === 0">
+                            📥 Export to Excel
+                        </button>
+                    </div>
+                    
+                    <table class="mapping-table">
+                        <thead>
+                            <tr>
+                                <th>Source Table</th>
+                                <th>Source Column</th>
+                                <th>Transformation Rule</th>
+                                <th>Target Field</th>
+                                <th>Confidence</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="mapping in mappings" :key="mapping.id">
+                                <td>{{ mapping.source_table }}</td>
+                                <td>{{ mapping.source_column }}</td>
+                                <td style="max-width: 300px; word-wrap: break-word;">{{ mapping.transformation_rule }}</td>
+                                <td>{{ mapping.target_field }}</td>
+                                <td>
+                                    <div class="confidence-score">
+                                        <span>{{ Math.round(mapping.confidence_score * 100) }}%</span>
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill" 
+                                                 :class="getConfidenceClass(mapping.confidence_score)"
+                                                 :style="{width: (mapping.confidence_score * 100) + '%'}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span v-if="mapping.needs_review" class="needs-review">Review Required</span>
+                                    <span v-else style="color: #28a745;">✓ Validated</span>
+                                </td>
+                                <td>
+                                    <button class="btn" style="padding: 4px 8px; font-size: 12px;" 
+                                            @click="editMapping(mapping)">
+                                        ✏️ Edit
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Review Tab -->
+                <div v-if="activeTab === 'review'">
+                    <h3>Mappings Requiring Review</h3>
+                    <p>These mappings have been flagged by the AI agents for human review:</p>
+                    
+                    <div v-for="mapping in reviewMappings" :key="mapping.id" class="card" style="margin: 10px 0; padding: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px;">
+                            <div>
+                                <strong>{{ mapping.source_table }}.{{ mapping.source_column }}</strong> → {{ mapping.target_field }}
+                                <br>
+                                <code style="background: #f8f9fa; padding: 4px; border-radius: 3px; display: block; margin: 8px 0;">
+                                    {{ mapping.transformation_rule }}
+                                </code>
+                                <small style="color: #666;">{{ mapping.agent_notes }}</small>
+                            </div>
+                            <div>
+                                <button class="btn" @click="approveMapping(mapping)">
+                                    ✅ Approve
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Tab -->
+                <div v-if="activeTab === 'stats'">
+                    <h3>Analysis Statistics</h3>
+                    <div class="form-row">
+                        <div class="card" style="padding: 20px; text-align: center;">
+                            <h4>{{ totalMappings }}</h4>
+                            <p>Total Mappings</p>
+                        </div>
+                        <div class="card" style="padding: 20px; text-align: center;">
+                            <h4>{{ highConfidenceCount }}</h4>
+                            <p>High Confidence</p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="card" style="padding: 20px; text-align: center;">
+                            <h4>{{ reviewCount }}</h4>
+                            <p>Need Review</p>
+                        </div>
+                        <div class="card" style="padding: 20px; text-align: center;">
+                            <h4>{{ Math.round(averageConfidence * 100) }}%</h4>
+                            <p>Average Confidence</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    analysisConfig: {
+                        notebook_path: 'load_silver_provider.py',
+                        gitlab_credentials: {
+                            gitlab_url: '',
+                            project_id: '',
+                            access_token: '',
+                            branch: 'main'
+                        }
+                    },
+                    isAnalyzing: false,
+                    progress: 0,
+                    currentStep: '',
+                    error: null,
+                    analysisComplete: false,
+                    currentSession: null,
+                    mappings: [],
+                    activeTab: 'mappings'
+                };
+            },
+            computed: {
+                reviewMappings() {
+                    return this.mappings.filter(m => m.needs_review);
+                },
+                reviewCount() {
+                    return this.reviewMappings.length;
+                },
+                totalMappings() {
+                    return this.mappings.length;
+                },
+                highConfidenceCount() {
+                    return this.mappings.filter(m => m.confidence_score >= 0.8).length;
+                },
+                averageConfidence() {
+                    if (this.mappings.length === 0) return 0;
+                    return this.mappings.reduce((sum, m) => sum + m.confidence_score, 0) / this.mappings.length;
+                }
+            },
+            methods: {
+                async startAnalysis() {
+                    this.isAnalyzing = true;
+                    this.error = null;
+                    this.analysisComplete = false;
+                    this.progress = 0;
+                    this.currentStep = 'Initializing analysis...';
+                    
+                    try {
+                        // Simulate progress updates
+                        this.updateProgress(20, 'Code Analysis Agent running...');
+                        
+                        const response = await axios.post('/api/analyze', this.analysisConfig);
+                        
+                        this.updateProgress(60, 'Validation Agent processing...');
+                        await this.sleep(1500);
+                        
+                        this.updateProgress(90, 'Document Generation Agent finalizing...');
+                        await this.sleep(1000);
+                        
+                        if (response.data.success) {
+                            this.currentSession = response.data;
+                            this.progress = 100;
+                            this.currentStep = 'Analysis complete!';
+                            this.analysisComplete = true;
+                            
+                            // Load mapping results
+                            await this.loadMappings(response.data.session_id);
+                        } else {
+                            throw new Error(response.data.error || 'Analysis failed');
+                        }
+                    } catch (error) {
+                        this.error = error.response?.data?.error || error.message || 'Analysis failed';
+                    } finally {
+                        this.isAnalyzing = false;
+                    }
+                },
+                
+                async loadMappings(sessionId) {
+                    try {
+                        const response = await axios.get(`/api/sessions/${sessionId}/results`);
+                        this.mappings = response.data.results;
+                    } catch (error) {
+                        console.error('Failed to load mappings:', error);
+                    }
+                },
+                
+                updateProgress(percent, step) {
+                    this.progress = percent;
+                    this.currentStep = step;
+                },
+                
+                sleep(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                },
+                
+                getConfidenceClass(score) {
+                    if (score >= 0.8) return 'confidence-high';
+                    if (score >= 0.5) return 'confidence-medium';
+                    return 'confidence-low';
+                },
+                
+                async exportToExcel() {
+                    if (!this.currentSession) return;
+                    
+                    try {
+                        const response = await axios.get(`/api/sessions/${this.currentSession.session_id}/export`, {
+                            responseType: 'blob'
+                        });
+                        
+                        // Create download link
+                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', `mapping_document_${this.currentSession.session_id}.xlsx`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } catch (error) {
+                        this.error = 'Failed to export Excel file';
+                    }
+                },
+                
+                editMapping(mapping) {
+                    // TODO: Implement mapping edit functionality
+                    alert('Edit functionality will be implemented in the next iteration');
+                },
+                
+                async approveMapping(mapping) {
+                    try {
+                        await axios.post(`/api/sessions/${this.currentSession.session_id}/update`, {
+                            result_id: mapping.id,
+                            needs_review: false
+                        });
+                        
+                        mapping.needs_review = false;
+                    } catch (error) {
+                        this.error = 'Failed to approve mapping';
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
