@@ -308,29 +308,29 @@
                         <div class="progress-bar">
                             <div class="progress-fill" :style="{width: progress + '%'}"></div>
                         </div>
-                        <p>{{ currentStep }}</p>
+                        <p>[[ currentStep ]]</p>
                     </div>
                 </div>
             </div>
 
             <!-- Error Display -->
             <div v-if="error" class="alert alert-error">
-                <strong>Error:</strong> {{ error }}
+                <strong>Error:</strong> [[ error ]]
             </div>
 
             <!-- Success Display -->
             <div v-if="analysisComplete" class="alert alert-success">
-                <strong>Analysis Complete!</strong> {{ totalMappings }} mappings generated with {{ highConfidenceCount }} high-confidence results.
+                <strong>Analysis Complete!</strong> [[ totalMappings ]] mappings generated with [[ highConfidenceCount ]] high-confidence results.
             </div>
 
             <!-- Results Section -->
             <div v-if="currentSession" class="card">
                 <div class="tabs">
                     <div class="tab" :class="{active: activeTab === 'mappings'}" @click="activeTab = 'mappings'">
-                        📋 Mappings ({{ mappings.length }})
+                        📋 Mappings ([[ mappings.length ]])
                     </div>
                     <div class="tab" :class="{active: activeTab === 'review'}" @click="activeTab = 'review'">
-                        🔍 Review Required ({{ reviewCount }})
+                        🔍 Review Required ([[ reviewCount ]])
                     </div>
                     <div class="tab" :class="{active: activeTab === 'stats'}" @click="activeTab = 'stats'">
                         📊 Statistics
@@ -360,13 +360,13 @@
                         </thead>
                         <tbody>
                             <tr v-for="mapping in mappings" :key="mapping.id">
-                                <td>{{ mapping.source_table }}</td>
-                                <td>{{ mapping.source_column }}</td>
-                                <td style="max-width: 300px; word-wrap: break-word;">{{ mapping.transformation_rule }}</td>
-                                <td>{{ mapping.target_field }}</td>
+                                <td>[[ mapping.source_table ]]</td>
+                                <td>[[ mapping.source_column ]]</td>
+                                <td style="max-width: 300px; word-wrap: break-word;">[[ mapping.transformation_rule ]]</td>
+                                <td>[[ mapping.target_field ]]</td>
                                 <td>
                                     <div class="confidence-score">
-                                        <span>{{ Math.round(mapping.confidence_score * 100) }}%</span>
+                                        <span>[[ Math.round(mapping.confidence_score * 100) ]]%</span>
                                         <div class="confidence-bar">
                                             <div class="confidence-fill" 
                                                  :class="getConfidenceClass(mapping.confidence_score)"
@@ -398,12 +398,12 @@
                     <div v-for="mapping in reviewMappings" :key="mapping.id" class="card" style="margin: 10px 0; padding: 15px;">
                         <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px;">
                             <div>
-                                <strong>{{ mapping.source_table }}.{{ mapping.source_column }}</strong> → {{ mapping.target_field }}
+                                <strong>[[ mapping.source_table ]].[[ mapping.source_column ]]</strong> → [[ mapping.target_field ]]
                                 <br>
                                 <code style="background: #f8f9fa; padding: 4px; border-radius: 3px; display: block; margin: 8px 0;">
-                                    {{ mapping.transformation_rule }}
+                                    [[ mapping.transformation_rule ]]
                                 </code>
-                                <small style="color: #666;">{{ mapping.agent_notes }}</small>
+                                <small style="color: #666;">[[ mapping.agent_notes ]]</small>
                             </div>
                             <div>
                                 <button class="btn" @click="approveMapping(mapping)">
@@ -419,21 +419,21 @@
                     <h3>Analysis Statistics</h3>
                     <div class="form-row">
                         <div class="card" style="padding: 20px; text-align: center;">
-                            <h4>{{ totalMappings }}</h4>
+                            <h4>[[ totalMappings ]]</h4>
                             <p>Total Mappings</p>
                         </div>
                         <div class="card" style="padding: 20px; text-align: center;">
-                            <h4>{{ highConfidenceCount }}</h4>
+                            <h4>[[ highConfidenceCount ]]</h4>
                             <p>High Confidence</p>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="card" style="padding: 20px; text-align: center;">
-                            <h4>{{ reviewCount }}</h4>
+                            <h4>[[ reviewCount ]]</h4>
                             <p>Need Review</p>
                         </div>
                         <div class="card" style="padding: 20px; text-align: center;">
-                            <h4>{{ Math.round(averageConfidence * 100) }}%</h4>
+                            <h4>[[ Math.round(averageConfidence * 100) ]]%</h4>
                             <p>Average Confidence</p>
                         </div>
                     </div>
@@ -446,6 +446,7 @@
         const { createApp } = Vue;
         
         createApp({
+            delimiters: ['[[', ']]'],
             data() {
                 return {
                     analysisConfig: {
