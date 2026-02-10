@@ -13,7 +13,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from services.llm_service import LLMService
-from services.gitlab_service import GitlabService  
+from services.gitlab_service import GitLabService  
 from agents.code_analysis_agent import CodeAnalysisAgent
 from agents.legacy_mapping_agent import LegacyMappingAgent
 from agents.validation_agent import ValidationAgent
@@ -53,7 +53,7 @@ async def test_gitlab_service():
     """Test GitLab service functionality"""
     print("\n📁 Testing GitLab Service...")
     
-    gitlab_service = GitlabService()
+    gitlab_service = GitLabService()
     
     try:
         # Test local file reading

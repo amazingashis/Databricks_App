@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from agents.agent_orchestrator import AgentOrchestrator
-from services.gitlab_service import GitlabService
+from services.gitlab_service import GitLabService
 from services.llm_service import LLMService
 from models.database import db, MappingSession, MappingResult
 from models.databricks_config import get_database_config
@@ -38,7 +38,7 @@ llm_service = LLMService(
 )
 
 agent_orchestrator = AgentOrchestrator(llm_service=llm_service)
-gitlab_service = GitlabService()
+gitlab_service = GitLabService()
 
 @app.route('/')
 def index():

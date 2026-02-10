@@ -24,7 +24,7 @@ def test_imports():
         return False
     
     try:
-        from services.gitlab_service import GitlabService  
+        from services.gitlab_service import GitLabService  
         print("✅ GitLab Service imported successfully")
     except Exception as e:
         print(f"❌ GitLab Service import failed: {e}")
@@ -45,8 +45,8 @@ async def test_gitlab_service():
     print("\n📁 Testing GitLab Service...")
     
     try:
-        from services.gitlab_service import GitlabService
-        gitlab_service = GitlabService()
+        from services.gitlab_service import GitLabService
+        gitlab_service = GitLabService()
         
         # Test local file reading
         content = await gitlab_service.fetch_notebook_content('load_silver_provider.py')

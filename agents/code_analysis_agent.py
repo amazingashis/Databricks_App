@@ -2,7 +2,7 @@ import ast
 import re
 import asyncio
 from typing import Dict, List, Any, Optional
-from services.gitlab_service import GitlabService
+from services.gitlab_service import GitLabService
 from services.llm_service import LLMService
 
 
@@ -14,7 +14,7 @@ class CodeAnalysisAgent:
     
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
-        self.gitlab_service = GitlabService()
+        self.gitlab_service = GitLabService()
         
         # Patterns for different types of transformations
         self.transformation_patterns = {
